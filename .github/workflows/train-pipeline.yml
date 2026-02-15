@@ -56,6 +56,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create .env from template
+        run: cp .env.example .env
+
       - name: Build training service
         run: |
           docker compose build training-service
@@ -97,6 +100,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Create .env from template
+        run: cp .env.example .env
 
       - name: Rebuild and restart all services
         run: |
