@@ -43,3 +43,5 @@ data/processed/
 
 # Byte-compiled
 *.pyc
+
+/docs
