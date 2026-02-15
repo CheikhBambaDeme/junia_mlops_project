@@ -7,6 +7,7 @@ Complete training pipeline with:
 - Model training with MLflow experiment tracking
 - Explicit model saving (joblib) with versioning
 - Metrics logging
+(test)
 """
 
 import os
