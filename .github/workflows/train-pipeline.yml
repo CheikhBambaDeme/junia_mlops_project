@@ -116,6 +116,18 @@ jobs:
           echo "🔍 Training service health:"
           curl -s http://localhost:8000/health | python3 -m json.tool
 
+      - name: Train model on fresh deployment
+        run: |
+          echo "🏋️ Training model on fresh containers..."
+          RESPONSE=$(curl -s -X POST http://localhost:8000/train)
+          echo "Training response: $RESPONSE"
+          STATUS=$(echo $RESPONSE | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])")
+          if [ "$STATUS" != "success" ]; then
+            echo "❌ Training failed!"
+            exit 1
+          fi
+          echo "✅ Model trained successfully"
+
       - name: Verify Django service
         run: |
           echo "🔍 Django service health:"
