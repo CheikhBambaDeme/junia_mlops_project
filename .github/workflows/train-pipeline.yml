@@ -23,7 +23,7 @@ on:
 jobs:
   validate-data:
     name: 🔍 Validate Data
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
   train-model:
     name: 🏋️ Train Model
     needs: validate-data
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -93,7 +93,7 @@ jobs:
   deploy-local:
     name: 🚀 Deploy Locally
     needs: train-model
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

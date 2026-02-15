@@ -3,11 +3,8 @@ model.py - Model Architecture & Preprocessing
 ===============================================
 Defines the model architecture and feature preprocessing pipeline.
 This is intentionally separated so changes here trigger CI/CD retraining.
-"""
 
-import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+Last updated: 2026-02-15 — initial pipeline test
 from sklearn.preprocessing import LabelEncoder
 import logging
 

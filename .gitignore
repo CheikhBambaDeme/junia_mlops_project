@@ -34,8 +34,8 @@ models/artifacts/*.joblib
 # Logs
 logs/*.log
 
-# Data (raw data not committed - downloaded via Kaggle)
-data/raw/*.csv
+# Data (large raw data can be gitignored in production)
+# For this project, we keep the small CSV in git so CI/CD works
 data/processed/
 
 # Docker
