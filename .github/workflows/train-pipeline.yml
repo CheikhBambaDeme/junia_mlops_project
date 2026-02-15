@@ -1,0 +1,137 @@
+# =============================================================
+# ML Training Pipeline — GitHub Actions (Self-Hosted Runner)
+# =============================================================
+# Triggers:
+#   - Push to training-service/src/** (model architecture change)
+#   - Push to data/raw/** (new data)
+#   - Manual dispatch
+#
+# Runs on a LOCAL self-hosted runner (not cloud).
+# =============================================================
+
+name: ML Training Pipeline
+
+on:
+  push:
+    paths:
+      - "training-service/src/**"
+      - "data/raw/**"
+    branches:
+      - main
+  workflow_dispatch: # Manual trigger from GitHub UI
+
+jobs:
+  validate-data:
+    name: 🔍 Validate Data
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r training-service/requirements.txt
+
+      - name: Validate data schema
+        run: |
+          cd training-service
+          python -c "
+          import pandas as pd
+          from src.validate_data import validate_housing_data
+          df = pd.read_csv('../data/raw/house_prices.csv')
+          validate_housing_data(df)
+          print('✅ Data validation passed')
+          "
+
+  train-model:
+    name: 🏋️ Train Model
+    needs: validate-data
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build training service
+        run: |
+          docker compose build training-service
+
+      - name: Start training service
+        run: |
+          docker compose up -d training-service
+          echo "Waiting for service to be healthy..."
+          sleep 15
+
+      - name: Trigger training via API
+        run: |
+          echo "🚀 Triggering model training..."
+          RESPONSE=$(curl -s -X POST http://localhost:8000/train)
+          echo "Training response: $RESPONSE"
+          
+          # Check if training succeeded
+          STATUS=$(echo $RESPONSE | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])")
+          if [ "$STATUS" != "success" ]; then
+            echo "❌ Training failed!"
+            exit 1
+          fi
+          echo "✅ Training succeeded!"
+
+      - name: Log model metrics
+        run: |
+          echo "📊 Model Metrics:"
+          curl -s http://localhost:8000/metrics | python3 -m json.tool
+
+      - name: Health check
+        run: |
+          echo "🏥 Health check:"
+          curl -s http://localhost:8000/health | python3 -m json.tool
+
+  deploy-local:
+    name: 🚀 Deploy Locally
+    needs: train-model
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Rebuild and restart all services
+        run: |
+          docker compose down
+          docker compose up -d --build
+          echo "Waiting for services to start..."
+          sleep 20
+
+      - name: Verify training service
+        run: |
+          echo "🔍 Training service health:"
+          curl -s http://localhost:8000/health | python3 -m json.tool
+
+      - name: Verify Django service
+        run: |
+          echo "🔍 Django service health:"
+          curl -s http://localhost:8080/health/ | python3 -m json.tool
+
+      - name: End-to-end prediction test
+        run: |
+          echo "🧪 Running end-to-end prediction test..."
+          RESPONSE=$(curl -s -X POST http://localhost:8000/predict \
+            -H "Content-Type: application/json" \
+            -d '{"Bedrooms": 3, "Bathrooms": 2, "SquareFeet": 1800, "Location": "Chicago"}')
+          echo "Prediction result: $RESPONSE"
+          
+          PRICE=$(echo $RESPONSE | python3 -c "import sys,json; print(json.load(sys.stdin)['prediction'])")
+          echo "✅ Predicted price: \$$PRICE"
+
+      - name: Deployment summary
+        run: |
+          echo "============================================"
+          echo "  ✅ LOCAL DEPLOYMENT COMPLETE"
+          echo "============================================"
+          echo "  Training API:  http://localhost:8000/docs"
+          echo "  Django App:    http://localhost:8080"
+          echo "  API Metrics:   http://localhost:8000/metrics"
+          echo "============================================"

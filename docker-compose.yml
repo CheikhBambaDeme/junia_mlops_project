@@ -1,0 +1,47 @@
+services:
+  # ============================================
+  # Container 1: Training & Inference API
+  # - Trains the model
+  # - Saves versioned model artifacts
+  # - Exposes FastAPI endpoints (/predict, /train, /metrics, /health)
+  # - Model is loaded at startup
+  # ============================================
+  training-service:
+    build: ./training-service
+    container_name: training-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./mlruns:/app/mlruns
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # ============================================
+  # Container 2: Django Frontend
+  # - Simple web form for users to input features
+  # - Calls training-service /predict via HTTP
+  # - Displays estimated price
+  # ============================================
+  django-service:
+    build: ./django-service
+    container_name: django-app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    depends_on:
+      training-service:
+        condition: service_healthy
+    restart: unless-stopped

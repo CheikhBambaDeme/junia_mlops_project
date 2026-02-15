@@ -1,0 +1,2 @@
+# This directory stores model artifacts (managed by the training pipeline)
+# Model files (.joblib) are gitignored — they are generated at training time.

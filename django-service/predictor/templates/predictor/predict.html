@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Housing Price Predictor — MLOps Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            padding: 40px;
+            max-width: 520px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            color: #1a1a2e;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+            margin-top: 16px;
+            font-size: 0.95rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d0d5dd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+        }
+        .helptext {
+            font-size: 0.8rem;
+            color: #999;
+        }
+        .errorlist {
+            color: #e53e3e;
+            font-size: 0.85rem;
+            list-style: none;
+            padding: 0;
+        }
+        button[type="submit"] {
+            margin-top: 24px;
+            width: 100%;
+            padding: 12px;
+            background: #4a6cf7;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button[type="submit"]:hover {
+            background: #3b5de7;
+        }
+        .result {
+            margin-top: 24px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .result.success {
+            background: #e6f9ee;
+            border: 1px solid #b7e4c7;
+        }
+        .result.success h2 {
+            color: #1b7a3d;
+            font-size: 1.5rem;
+        }
+        .result.success .version {
+            color: #888;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+        .result.error {
+            background: #ffeaea;
+            border: 1px solid #f5c6c6;
+            color: #c0392b;
+            text-align: left;
+        }
+        .footer {
+            margin-top: 28px;
+            text-align: center;
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Housing Price Predictor</h1>
+        <p class="subtitle">Enter housing features to estimate the price</p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <ul class="errorlist">
+                    {% for err in field.errors %}<li>{{ err }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit">Predict Price</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result success">
+            <h2>Estimated Price: ${{ prediction|floatformat:2 }}</h2>
+            {% if model_version %}
+            <p class="version">Model version: {{ model_version }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="result error">
+            <p><strong>Error:</strong> {{ error }}</p>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            Junia MLOps Project — Housing Price Prediction
+        </div>
+    </div>
+</body>
+</html>
