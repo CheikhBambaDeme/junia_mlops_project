@@ -5,6 +5,7 @@ Defines the model architecture and feature preprocessing pipeline.
 This is intentionally separated so changes here trigger CI/CD retraining.
 
 Last updated: 2026-02-15 — initial pipeline test
+(test)
 """
 
 import pandas as pd
