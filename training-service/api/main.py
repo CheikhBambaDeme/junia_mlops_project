@@ -29,6 +29,7 @@ logging.basicConfig(
         logging.FileHandler("/app/logs/api.log"),
         logging.StreamHandler(),
     ],
+    force=True,
 )
 logger = logging.getLogger(__name__)
 
