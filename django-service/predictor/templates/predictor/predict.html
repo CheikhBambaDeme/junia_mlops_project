@@ -1,163 +1,200 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Housing Price Predictor — MLOps Demo</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            color: #333;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 40px 20px;
-        }
-        .container {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-            padding: 40px;
-            max-width: 520px;
-            width: 100%;
-        }
-        h1 {
-            font-size: 1.6rem;
-            margin-bottom: 8px;
-            color: #1a1a2e;
-        }
-        .subtitle {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 28px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 4px;
-            margin-top: 16px;
-            font-size: 0.95rem;
-        }
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #d0d5dd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: #4a6cf7;
-            box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
-        }
-        .helptext {
-            font-size: 0.8rem;
-            color: #999;
-        }
-        .errorlist {
-            color: #e53e3e;
-            font-size: 0.85rem;
-            list-style: none;
-            padding: 0;
-        }
-        button[type="submit"] {
-            margin-top: 24px;
-            width: 100%;
-            padding: 12px;
-            background: #4a6cf7;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button[type="submit"]:hover {
-            background: #3b5de7;
-        }
-        .result {
-            margin-top: 24px;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .result.success {
-            background: #e6f9ee;
-            border: 1px solid #b7e4c7;
-        }
-        .result.success h2 {
-            color: #1b7a3d;
-            font-size: 1.5rem;
-        }
-        .result.success .version {
-            color: #888;
-            font-size: 0.8rem;
-            margin-top: 6px;
-        }
-        .result.error {
-            background: #ffeaea;
-            border: 1px solid #f5c6c6;
-            color: #c0392b;
-            text-align: left;
-        }
-        .footer {
-            margin-top: 28px;
-            text-align: center;
-            color: #aaa;
-            font-size: 0.8rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🏠 Housing Price Predictor</h1>
-        <p class="subtitle">Enter housing features to estimate the price</p>
+{% extends "predictor/base.html" %}
 
-        <form method="post">
-            {% csrf_token %}
+{% block title %}Predict — HousePricer{% endblock %}
+{% block page_title %}Price Prediction{% endblock %}
 
-            {% for field in form %}
-            <div>
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                <ul class="errorlist">
-                    {% for err in field.errors %}<li>{{ err }}</li>{% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            {% endfor %}
+{% block topbar_badges %}
+<span class="topbar-badge live">Live Model</span>
+{% endblock %}
 
-            <button type="submit">Predict Price</button>
-        </form>
+{% block extra_css %}
+<style>
+    @media (max-width: 768px) {
+        .predict-grid { grid-template-columns: 1fr !important; }
+    }
+</style>
+{% endblock %}
 
-        {% if prediction %}
-        <div class="result success">
-            <h2>Estimated Price: ${{ prediction|floatformat:2 }}</h2>
-            {% if model_version %}
-            <p class="version">Model version: {{ model_version }}</p>
-            {% endif %}
+{% block content %}
+<div class="predict-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 960px;">
+
+    <!-- ============================================================
+         Left Column — Form
+         ============================================================ -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Property Features</h2>
+            <span class="tag tag-accent">4 inputs</span>
         </div>
-        {% endif %}
+        <div class="card-body">
+            <form method="post" id="predictForm">
+                {% csrf_token %}
 
-        {% if error %}
-        <div class="result error">
-            <p><strong>Error:</strong> {{ error }}</p>
-        </div>
-        {% endif %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.bedrooms.id_for_label }}">
+                            🛏️ Bedrooms
+                        </label>
+                        {{ form.bedrooms }}
+                        <span class="form-hint">Between 1 and 10</span>
+                        {% if form.bedrooms.errors %}
+                            {% for err in form.bedrooms.errors %}
+                                <div class="form-error">⚠ {{ err }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.bathrooms.id_for_label }}">
+                            🚿 Bathrooms
+                        </label>
+                        {{ form.bathrooms }}
+                        <span class="form-hint">Between 1 and 5</span>
+                        {% if form.bathrooms.errors %}
+                            {% for err in form.bathrooms.errors %}
+                                <div class="form-error">⚠ {{ err }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
 
-        <div class="footer">
-            Junia MLOps Project — Housing Price Prediction
+                <div class="form-group">
+                    <label for="{{ form.sqft_living.id_for_label }}">
+                        📐 Living Area
+                    </label>
+                    {{ form.sqft_living }}
+                    <span class="form-hint">Square footage (100 – 10,000)</span>
+                    {% if form.sqft_living.errors %}
+                        {% for err in form.sqft_living.errors %}
+                            <div class="form-error">⚠ {{ err }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.location.id_for_label }}">
+                        📍 Location
+                    </label>
+                    {{ form.location }}
+                    {% if form.location.errors %}
+                        {% for err in form.location.errors %}
+                            <div class="form-error">⚠ {{ err }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg mt-4" id="submitBtn">
+                    <span class="spinner"></span>
+                    <span class="btn-text">Predict Price</span>
+                </button>
+            </form>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- ============================================================
+         Right Column —  Result / Empty State
+         ============================================================ -->
+    <div>
+        {% if prediction %}
+        <div class="card" style="border-color: var(--success-border);">
+            <div class="card-header">
+                <h2>Prediction Result</h2>
+                <span class="tag tag-success">Success</span>
+            </div>
+            <div class="card-body">
+                <div class="result-label">Estimated Price</div>
+                <div class="result-price">${{ prediction|floatformat:2 }}</div>
+
+                <div class="result-meta">
+                    {% if model_version %}
+                    <span class="result-meta-item">
+                        <span class="dot"></span>
+                        Model: {{ model_version }}
+                    </span>
+                    {% endif %}
+                    <span class="result-meta-item">
+                        <span class="dot"></span>
+                        Confidence: High
+                    </span>
+                </div>
+
+                <!-- Feature Summary Chips -->
+                <div class="feature-chips">
+                    {% if submitted_features %}
+                    <span class="feature-chip">
+                        <span class="chip-label">Beds</span>
+                        <span class="chip-value">{{ submitted_features.bedrooms }}</span>
+                    </span>
+                    <span class="feature-chip">
+                        <span class="chip-label">Baths</span>
+                        <span class="chip-value">{{ submitted_features.bathrooms }}</span>
+                    </span>
+                    <span class="feature-chip">
+                        <span class="chip-label">Sqft</span>
+                        <span class="chip-value">{{ submitted_features.sqft_living }}</span>
+                    </span>
+                    <span class="feature-chip">
+                        <span class="chip-label">City</span>
+                        <span class="chip-value">{{ submitted_features.location }}</span>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% elif error %}
+        <div class="card" style="border-color: var(--error-border);">
+            <div class="card-header">
+                <h2>Prediction Failed</h2>
+                <span class="tag" style="background:var(--error-bg);color:var(--error);">Error</span>
+            </div>
+            <div class="card-body">
+                <div class="result-error-text">{{ error }}</div>
+                <p class="text-sm text-muted mt-4">
+                    Make sure the training-service container is running and a model has been trained.
+                </p>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <div class="empty-state">
+                    <div class="empty-icon">🏠</div>
+                    <h3>No Prediction Yet</h3>
+                    <p>Fill in the property features on the left and click <strong>Predict Price</strong> to get an estimated value.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick-info card -->
+        <div class="card mt-4">
+            <div class="card-body" style="padding: 16px 20px;">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-muted">Model</span>
+                    <span class="tag tag-info">RandomForest</span>
+                </div>
+                <div class="flex items-center justify-between mt-2">
+                    <span class="text-sm text-muted">Features</span>
+                    <span class="text-sm" style="color:var(--text-secondary);">Bedrooms, Bathrooms, SqFt, Location</span>
+                </div>
+                <div class="flex items-center justify-between mt-2">
+                    <span class="text-sm text-muted">Pipeline</span>
+                    <span class="tag tag-accent">MLOps v1</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('predictForm').addEventListener('submit', function() {
+    var btn = document.getElementById('submitBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+});
+</script>
+{% endblock %}

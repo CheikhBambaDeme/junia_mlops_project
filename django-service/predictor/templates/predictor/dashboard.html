@@ -1,0 +1,169 @@
+{% extends "predictor/base.html" %}
+
+{% block title %}Dashboard — HousePricer{% endblock %}
+{% block page_title %}Model Dashboard{% endblock %}
+
+{% block topbar_badges %}
+{% if api_online %}
+    <span class="topbar-badge live">API Online</span>
+{% else %}
+    <span class="topbar-badge" style="background:var(--error-bg);color:var(--error);border:1px solid var(--error-border);">API Offline</span>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     Metric Cards
+     ============================================================ -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">R² Score</div>
+        <div class="stat-value success">{{ r2|default:"—" }}</div>
+        <div class="stat-hint">Variance explained</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">MAE</div>
+        <div class="stat-value accent">${{ mae|default:"—" }}</div>
+        <div class="stat-hint">Mean Absolute Error</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">RMSE</div>
+        <div class="stat-value warning">${{ rmse|default:"—" }}</div>
+        <div class="stat-hint">Root Mean Square Error</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Trained At</div>
+        <div class="stat-value info" style="font-size:1rem;">{{ trained_at|default:"—" }}</div>
+        <div class="stat-hint">Last training timestamp</div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Two-Column Layout
+     ============================================================ -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+
+    <!-- Model Parameters -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Model Parameters</h2>
+            <span class="tag tag-info">RandomForest</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if model_params %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key, value in model_params.items %}
+                    <tr>
+                        <td>{{ key }}</td>
+                        <td class="mono">{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state" style="padding:32px;">
+                <div class="empty-icon">⚙️</div>
+                <h3>No Parameters</h3>
+                <p>Train a model to see its hyperparameters.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Features Used -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Features Used</h2>
+            {% if features %}
+            <span class="tag tag-accent">{{ features|length }} features</span>
+            {% endif %}
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if features %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Feature Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feature in features %}
+                    <tr>
+                        <td class="mono">{{ forloop.counter }}</td>
+                        <td>{{ feature }}</td>
+                        <td><span class="tag tag-success">Active</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state" style="padding:32px;">
+                <div class="empty-icon">📋</div>
+                <h3>No Features</h3>
+                <p>Train a model to see which features it uses.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     API Health Status
+     ============================================================ -->
+<div class="card mt-6">
+    <div class="card-header">
+        <h2>System Status</h2>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Status</th>
+                    <th>Endpoint</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Training API</td>
+                    <td>
+                        {% if api_online %}
+                            <span class="tag tag-success">Online</span>
+                        {% else %}
+                            <span class="tag" style="background:var(--error-bg);color:var(--error);">Offline</span>
+                        {% endif %}
+                    </td>
+                    <td class="mono">{{ api_url }}/health</td>
+                </tr>
+                <tr>
+                    <td>Model Status</td>
+                    <td>
+                        {% if model_loaded %}
+                            <span class="tag tag-success">Loaded</span>
+                        {% else %}
+                            <span class="tag tag-warning">Not Loaded</span>
+                        {% endif %}
+                    </td>
+                    <td class="mono">{{ api_url }}/predict</td>
+                </tr>
+                <tr>
+                    <td>Django Frontend</td>
+                    <td><span class="tag tag-success">Online</span></td>
+                    <td class="mono">:8080</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends "predictor/base.html" %}
+
+{% block title %}API Documentation — HousePricer{% endblock %}
+{% block page_title %}API Documentation{% endblock %}
+
+{% block topbar_badges %}
+<span class="topbar-badge" style="background:var(--info-bg);color:var(--info);border:1px solid rgba(59,130,246,0.2);">REST API</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .endpoint-card { margin-bottom: 16px; }
+    .method-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        letter-spacing: 0.04em;
+    }
+    .method-get { background: var(--success-bg); color: var(--success); }
+    .method-post { background: var(--info-bg); color: var(--info); }
+    .endpoint-path {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 0.88rem;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+    .endpoint-desc {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 8px;
+        line-height: 1.5;
+    }
+    .code-block {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 16px 20px;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        overflow-x: auto;
+        white-space: pre;
+        line-height: 1.6;
+        margin-top: 12px;
+    }
+    .code-block .key { color: #818cf8; }
+    .code-block .string { color: #34d399; }
+    .code-block .number { color: #fbbf24; }
+    .param-table th { font-size: 0.7rem; }
+    .param-table td { font-size: 0.82rem; }
+    .param-table .type { color: var(--accent); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.78rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<p class="text-sm text-muted mb-6">
+    The Training API runs on port <strong>8000</strong> and exposes the following endpoints.
+    Base URL: <code style="color:var(--accent);background:var(--accent-subtle);padding:2px 8px;border-radius:4px;">{{ api_url }}</code>
+</p>
+
+<!-- ============================================================
+     POST /predict
+     ============================================================ -->
+<div class="card endpoint-card">
+    <div class="card-header">
+        <div class="flex items-center gap-3">
+            <span class="method-badge method-post">POST</span>
+            <span class="endpoint-path">/predict</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="endpoint-desc">
+            Submit property features and receive an estimated price. The model must be loaded for this endpoint to respond.
+        </p>
+
+        <h3 style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:16px;margin-bottom:8px;">Request Body</h3>
+        <table class="data-table param-table">
+            <thead>
+                <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Bedrooms</td><td class="type">int</td><td>Yes</td><td>Number of bedrooms (1–10)</td></tr>
+                <tr><td>Bathrooms</td><td class="type">int</td><td>Yes</td><td>Number of bathrooms (1–5)</td></tr>
+                <tr><td>SquareFeet</td><td class="type">float</td><td>Yes</td><td>Living area in square feet</td></tr>
+                <tr><td>Location</td><td class="type">string</td><td>Yes</td><td>City name</td></tr>
+            </tbody>
+        </table>
+
+        <h3 style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:16px;margin-bottom:4px;">Example</h3>
+        <div class="code-block">{
+  <span class="key">"Bedrooms"</span>: <span class="number">3</span>,
+  <span class="key">"Bathrooms"</span>: <span class="number">2</span>,
+  <span class="key">"SquareFeet"</span>: <span class="number">1800</span>,
+  <span class="key">"Location"</span>: <span class="string">"New York"</span>
+}</div>
+
+        <h3 style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:16px;margin-bottom:4px;">Response</h3>
+        <div class="code-block">{
+  <span class="key">"prediction"</span>: <span class="number">345200.50</span>,
+  <span class="key">"model_version"</span>: <span class="string">"housing_price_predictor_20260219_110919"</span>,
+  <span class="key">"features_used"</span>: [<span class="string">"Bedrooms"</span>, <span class="string">"Bathrooms"</span>, <span class="string">"SquareFeet"</span>, <span class="string">"Location"</span>]
+}</div>
+    </div>
+</div>
+
+<!-- ============================================================
+     POST /train
+     ============================================================ -->
+<div class="card endpoint-card">
+    <div class="card-header">
+        <div class="flex items-center gap-3">
+            <span class="method-badge method-post">POST</span>
+            <span class="endpoint-path">/train</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="endpoint-desc">
+            Trigger model retraining using the latest dataset. The model is automatically reloaded after training completes.
+        </p>
+
+        <h3 style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:16px;margin-bottom:4px;">Response</h3>
+        <div class="code-block">{
+  <span class="key">"status"</span>: <span class="string">"success"</span>,
+  <span class="key">"metrics"</span>: { <span class="key">"r2"</span>: <span class="number">0.86</span>, <span class="key">"mae"</span>: <span class="number">45230.12</span>, <span class="key">"rmse"</span>: <span class="number">58102.44</span> },
+  <span class="key">"timestamp"</span>: <span class="string">"20260219_110919"</span>,
+  <span class="key">"model_path"</span>: <span class="string">"/app/models/artifacts/housing_price_predictor_20260219_110919.joblib"</span>
+}</div>
+    </div>
+</div>
+
+<!-- ============================================================
+     GET /metrics
+     ============================================================ -->
+<div class="card endpoint-card">
+    <div class="card-header">
+        <div class="flex items-center gap-3">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/metrics</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="endpoint-desc">
+            Returns the current model's performance metrics, hyperparameters, and feature list.
+            Used by the Dashboard page to display live model information.
+        </p>
+
+        <h3 style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:16px;margin-bottom:4px;">Response</h3>
+        <div class="code-block">{
+  <span class="key">"metrics"</span>: { <span class="key">"r2"</span>: <span class="number">0.86</span>, <span class="key">"mae"</span>: <span class="number">45230.12</span>, <span class="key">"rmse"</span>: <span class="number">58102.44</span> },
+  <span class="key">"timestamp"</span>: <span class="string">"20260219_110919"</span>,
+  <span class="key">"model_params"</span>: { <span class="key">"n_estimators"</span>: <span class="number">200</span>, <span class="key">"max_depth"</span>: <span class="number">20</span> },
+  <span class="key">"features"</span>: [<span class="string">"Bedrooms"</span>, <span class="string">"Bathrooms"</span>, <span class="string">"SquareFeet"</span>, <span class="string">"Location_encoded"</span>]
+}</div>
+    </div>
+</div>
+
+<!-- ============================================================
+     GET /health
+     ============================================================ -->
+<div class="card endpoint-card">
+    <div class="card-header">
+        <div class="flex items-center gap-3">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/health</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="endpoint-desc">
+            Health check endpoint. Reports service status and whether a model is currently loaded in memory.
+        </p>
+
+        <h3 style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:16px;margin-bottom:4px;">Response</h3>
+        <div class="code-block">{
+  <span class="key">"status"</span>: <span class="string">"healthy"</span>,
+  <span class="key">"model_loaded"</span>: <span class="number">true</span>
+}</div>
+    </div>
+</div>
+
+{% endblock %}

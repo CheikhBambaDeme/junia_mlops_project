@@ -41,6 +41,9 @@ data/processed/
 # Docker
 *.tar
 
+# Presentation
+presentation/
+
 # Byte-compiled
 *.pyc
 
