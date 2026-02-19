@@ -22,15 +22,6 @@ load_dotenv()
 
 # ---- Logging ----
 os.makedirs("/app/logs", exist_ok=True)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("/app/logs/api.log"),
-        logging.StreamHandler(),
-    ],
-    force=True,
-)
 logger = logging.getLogger(__name__)
 
 # ---- Global predictor (loaded at startup) ----
@@ -75,6 +66,15 @@ class HealthResponse(BaseModel):
 async def lifespan(app: FastAPI):
     """Load the model at application startup."""
     global predictor
+
+    # Set up file logging here — after uvicorn has configured its own logging
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    file_handler = logging.FileHandler("/app/logs/api.log")
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
+    root_logger.addHandler(file_handler)
 
     logger.info("=" * 50)
     logger.info("FastAPI starting — loading model at startup...")

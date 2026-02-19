@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def create_model(n_estimators=100, max_depth=15, random_state=42, **kwargs):
+def create_model(n_estimators=200, max_depth=20, random_state=42, min_samples_split=5, min_samples_leaf=2, **kwargs):
     """
     Create and return the model architecture.
     
@@ -28,18 +28,23 @@ def create_model(n_estimators=100, max_depth=15, random_state=42, **kwargs):
         n_estimators: Number of trees in the forest
         max_depth: Maximum depth of each tree
         random_state: Random seed for reproducibility
+        min_samples_split: Minimum samples required to split a node
+        min_samples_leaf: Minimum samples required at a leaf node
     
     Returns:
         sklearn model instance (unfitted)
     """
     logger.info(
         f"Creating RandomForestRegressor with n_estimators={n_estimators}, "
-        f"max_depth={max_depth}, random_state={random_state}"
+        f"max_depth={max_depth}, random_state={random_state}, "
+        f"min_samples_split={min_samples_split}, min_samples_leaf={min_samples_leaf}"
     )
     return RandomForestRegressor(
         n_estimators=n_estimators,
         max_depth=max_depth,
         random_state=random_state,
+        min_samples_split=min_samples_split,
+        min_samples_leaf=min_samples_leaf,
         n_jobs=-1
     )
 
