@@ -1,11 +1,4 @@
 services:
-  # ============================================
-  # Container 1: Training & Inference API
-  # - Trains the model
-  # - Saves versioned model artifacts
-  # - Exposes FastAPI endpoints (/predict, /train, /metrics, /health)
-  # - Model is loaded at startup
-  # ============================================
   training-service:
     build: ./training-service
     container_name: training-api
@@ -26,12 +19,7 @@ services:
       start_period: 15s
     restart: unless-stopped
 
-  # ============================================
-  # Container 2: Django Frontend
-  # - Simple web form for users to input features
-  # - Calls training-service /predict via HTTP
-  # - Displays estimated price
-  # ============================================
+
   django-service:
     build: ./django-service
     container_name: django-app

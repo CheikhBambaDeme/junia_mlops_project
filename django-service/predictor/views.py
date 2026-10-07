@@ -48,12 +48,7 @@ def _get_api_status():
 # Predict View
 # ==================================================================
 def predict_view(request):
-    """
-    Main view: renders the prediction form and displays results.
 
-    On POST, sends features to the Training Service /predict endpoint
-    and shows the predicted price.
-    """
     prediction = None
     model_version = None
     error = None
@@ -115,14 +110,8 @@ def predict_view(request):
     return render(request, "predictor/predict.html", ctx)
 
 
-# ==================================================================
-# Dashboard View
-# ==================================================================
 def dashboard_view(request):
-    """
-    Dashboard showing live model metrics, parameters, and system status.
-    Fetches data from the training service /metrics endpoint.
-    """
+
     r2 = mae = rmse = trained_at = None
     model_params = {}
     features = []
